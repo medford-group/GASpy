@@ -193,6 +193,8 @@ def make_firework(atoms, fw_name, dft_settings):
     elif dft_settings['_calculator'] == 'rism':
         firework = _make_qe_firework(atoms, fw_name, dft_settings,
                                      espresso_function='espresso_tools.run_rism')
+    elif dft_settings['_calculator'] == 'SPARC':
+        firework = _make_sparc_firework(atoms, fw_name, dft_settings)
 
     # Yell if we try to run anything else
     else:
@@ -280,6 +282,47 @@ def _make_qe_firework(atoms, fw_name, qe_settings, espresso_function):
     fw_name['user'] = getpass.getuser()
     firework = Firework([clone_espresso_tools, relax, clean_up], name=fw_name)
     return firework
+
+def _make_sparc_firework(atoms, fw_name, qe_settings, espresso_function):
+    '''
+    This function creates a FireWorks rocket specifically tailored to do
+    SPARC-X calculations.
+
+    Args:
+        atoms               `ase.Atoms` object to relax
+        fw_name             Dictionary of tags/etc to use as the FireWorks name
+        sparc_settings      Dictionary of settings to pass to
+                            espresso_tools/Quantum Espresso
+        sparc_function      A string indicating the full path of the function
+                            within espresso_tools that you want to run
+    Returns:
+        firework    An instance of a `fireworks.Firework` object that is set up
+                    to perform a VASP relaxation
+    '''
+    # Clone the espresso_tools repository, which will help create the input
+    # files
+    clone_command = ('git clone https://github.com/SPARC-X/pysparcx.git ||'
+                     'git clone git@github.com:SPARC-X/pysparcx.git')
+    clone_sparc_tools = ScriptTask.from_str(clone_command)
+
+    # Tell the FireWork rocket to run the job using espresso_tools
+    atom_trajhex = encode_atoms_to_trajhex(atoms)
+    relax = PyTask(func=espresso_function,
+                   args=[atom_trajhex, qe_settings],
+                   stored_data_varname='opt_results')
+
+    # espresso_tools is big. Let's remove it and then leave behind the commit
+    # number we used (for traceability)
+    cleaning_command = ('cd pysparcx && '
+                        'git rev-parse --verify HEAD > ../sparc_version.log && '
+                        'cd .. && '
+                        'rm -rf py')
+    clean_up = ScriptTask.from_str(cleaning_command)
+
+    fw_name['user'] = getpass.getuser()
+    firework = Firework([clone_sparc_tools, relax, clean_up], name=fw_name)
+    return firework
+
 
 
 def encode_atoms_to_trajhex(atoms):

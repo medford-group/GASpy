@@ -91,6 +91,19 @@ def gas_settings():
                      kpts=(1, 1, 1),
                      sigma=0.05)
 
+    sparc = OrderedDict(_calculator='SPARC',
+                        xc = 'GGA'
+                        h=0.211, # grid spacing, tuned to approximate 400eV cutoff
+                        boundary_condition=1, # non-periodic
+                        psps='ONCV',
+                        smearing=0.05,
+                        relax_flag=1,
+                        tol_scf=1.36057e-5,
+                        tol_relax=0.05,
+                        mixing_variable='potential',
+                        mixing_precond='none',
+                        kpts=(1, 1, 1))
+
     rism = qe.copy()
     rism['_calculator'] = 'rism'
     rism['molecule'] = True
@@ -116,7 +129,7 @@ def gas_settings():
     # Re-set the sigma for gas-phase
     rism['sigma'] = 0.01
 
-    gas_settings = OrderedDict(vasp=vasp, qe=qe, rism=rism)
+    gas_settings = OrderedDict(vasp=vasp, qe=qe, rism=rism, sparc=sparc)
     return gas_settings
 
 
@@ -143,9 +156,24 @@ def bulk_settings():
                      kpts='bulk',
                      sigma=0.1)
 
+    sparc = OrderedDict(_calculator='SPARC',
+                        xc = 'GGA'
+                        h=0.1593, # grid spacing, tuned to approximate 700eV cutoff
+                        boundary_condition=2, # periodic
+                        psps='ONCV',
+                        smearing=0.1,
+                        relax_flag=1,
+                        relax_maxiter=100,
+                        tol_scf=1e-8,
+                        tol_relax=0.05,
+                        mixing_variable='density',
+                        mixing_precond='kerker',
+                        kpts=(10, 10, 10))
+
+
     rism = qe.copy()
 
-    bulk_settings = OrderedDict(max_atoms=80, vasp=vasp, qe=qe, rism=rism)
+    bulk_settings = OrderedDict(max_atoms=80, vasp=vasp, qe=qe, rism=rism, sparc=sparc)
     return bulk_settings
 
 
@@ -175,9 +203,24 @@ def surface_energy_bulk_settings():
                      kpts='bulk',
                      sigma=0.1)
 
+    sparc = OrderedDict(_calculator='SPARC',
+                        xc = 'GGA'
+                        h=0.1593, # grid spacing, tuned to approximate 700eV cutoff
+                        boundary_condition=2, # periodic
+                        psps='ONCV',
+                        smearing=0.1,
+                        relax_flag=1,
+                        relax_maxiter=100,
+                        tol_scf=1e-8,
+                        tol_relax=0.05,
+                        mixing_variable='density',
+                        mixing_precond='kerker',
+                        kpts=(10, 10, 10))
+
+
     rism = qe.copy()
 
-    SE_bulk_settings = OrderedDict(max_atoms=80, vasp=vasp, qe=qe, rism=rism)
+    SE_bulk_settings = OrderedDict(max_atoms=80, vasp=vasp, qe=qe, rism=rism, sparc = sparc)
     return SE_bulk_settings
 
 
@@ -208,6 +251,21 @@ def slab_settings():
                      kpts=(4, 4, 1),
                      sigma=0.1)
 
+    sparc = OrderedDict(_calculator='SPARC',
+                        xc = 'GGA'
+                        h=0.211, # grid spacing, tuned to approximate 400eV cutoff
+                        boundary_condition=2, # periodic
+                        psps='ONCV',
+                        smearing=0.1,
+                        relax_flag=1,
+                        relax_maxiter=100,
+                        tol_scf=1.36057e-5,
+                        tol_relax=0.03,
+                        mixing_variable='density',
+                        mixing_precond='kerker',
+                        kpts=(4, 4, 1))
+
+
     rism = qe.copy()
     rism['_calculator'] = 'rism'
     # Should be set by user
@@ -236,6 +294,7 @@ def slab_settings():
                                 vasp=vasp,
                                 qe=qe,
                                 rism=rism,
+                                sparc=sparc,
                                 slab_generator_settings=OrderedDict(min_slab_size=7.,
                                                                     min_vacuum_size=20.,
                                                                     lll_reduce=False,
@@ -276,6 +335,21 @@ def adslab_settings():
                      kpts=(4, 4, 1),
                      sigma=0.1)
 
+    sparc = OrderedDict(_calculator='SPARC',
+                        xc = 'GGA'
+                        h=0.211, # grid spacing, tuned to approximate 400eV cutoff
+                        boundary_condition=2, # periodic
+                        psps='ONCV',
+                        smearing=0.1,
+                        relax_flag=1,
+                        relax_maxiter=200,
+                        tol_scf=1.36057e-5,
+                        tol_relax=0.03,
+                        mixing_variable='density',
+                        mixing_precond='kerker',
+                        kpts=(4, 4, 1))
+
+
     rism = qe.copy()
     rism['_calculator'] = 'rism'
     # Should be set by user
@@ -302,7 +376,8 @@ def adslab_settings():
                                   rotation=OrderedDict(phi=0., theta=0., psi=0.),
                                   vasp=vasp,
                                   qe=qe,
-                                  rism=rism)
+                                  rism=rism
+                                  sparc=sparc)
     return adslab_settings
 
 
